@@ -1,0 +1,201 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+char* calculate_length(const char* str) {
+    int length = 0;
+    const char* p = str;
+
+    while (*p != '\0') {
+        length++;
+        p++;
+    }
+
+    char* result = (char*)malloc(length * sizeof(char) + 1);
+    sprintf(result, "%d", length);
+    return result;
+}
+
+char* reverse_string(const char* str) {
+    int length = 0;
+    const char* p = str;
+
+    while (*p != '\0') {
+        length++;
+        p++;
+    }
+
+    char* result = (char*)malloc(length * sizeof(char) + 1);
+    const char* q = str + length - 1;
+    char* r = result;
+
+    while (q >= str) {
+        *r = *q;
+        q--;
+        r++;
+    }
+
+    *r = '\0';
+    return result;
+}
+
+char* convert_to_uppercase(const char* str) {
+    int length = 0;
+    const char* p = str;
+
+    while (*p != '\0') {
+        length++;
+        p++;
+    }
+
+    char* result = (char*)malloc(length * sizeof(char) + 1);
+    const char* q = str;
+    char* r = result;
+
+    while (*q != '\0') {
+        if ((q - str) % 2 != 0) {
+            *r = toupper(*q);
+        }
+        else {
+            *r = *q;
+        }
+        q++;
+        r++;
+    }
+
+    *r = '\0';
+    return result;
+}
+
+char* transform_string(const char* str) {
+    int length = 0;
+    const char* p = str;
+
+    while (*p != '\0') {
+        length++;
+        p++;
+    }
+
+
+    char* result = (char*)malloc(length * sizeof(char) + 1);
+    char* digit_ptr = result;
+
+    int boolIndicator = 1;
+
+    while(boolIndicator) {
+
+    const char* strCopy = str;
+
+        while (*strCopy != '\0') {
+            if (isdigit(*strCopy) && boolIndicator == 1) {
+                *digit_ptr = *strCopy;
+                digit_ptr++;
+            } else if (isalpha(*strCopy) && boolIndicator == 2) {
+                *digit_ptr = *strCopy;
+                digit_ptr++;
+            } else if ((boolIndicator == 3 || boolIndicator == -1) && !isdigit(*strCopy) && !isalpha(*strCopy)) {
+                *digit_ptr = *strCopy;
+                digit_ptr++;
+            }
+
+            if(boolIndicator == 3) boolIndicator = -1;
+
+            strCopy++;
+        }
+
+        boolIndicator++;
+    }
+
+    *digit_ptr = '\0';
+
+    return result;
+}
+
+char* concatenate_strings(unsigned int seed, int num_strings, char* strings[]) {
+
+    srand(seed);
+
+    int length = 0;
+    for (int i = 0; i < num_strings; i++) {
+        length += strlen(strings[i]);
+    }
+
+    char* result = (char*)malloc(length * sizeof(char) + 1);
+    char* p = result;
+
+    for (int i = 0; i < num_strings; i++) {
+        int index = rand() % num_strings;
+        char* s = strings[index];
+
+        while (*s != '\0') {
+            *p = *s;
+            s++;
+            p++;
+        }
+    }
+
+    *p = '\0';
+
+    return result;
+}
+
+int main() {
+    char* result = NULL;
+
+    int argc = 7;
+
+    char* argv[] = {"-n", "asd123", "3", "qqwe", "1223", "!#@", "}"};
+
+    if (argc >= 3) {
+        char flag = argv[0][1];
+        char* str = argv[1];
+
+        switch (flag) {
+            case 'l':
+                result = calculate_length(str);
+                printf("Длина строки: %s\n", result);
+                break;
+
+            case 'r':
+                result = reverse_string(str);
+                printf("Строка после реверса: %s\n", result);
+                break;
+
+            case 'u':
+                result = convert_to_uppercase(str);
+                printf("Строка после конвертации: %s\n", result);
+                break;
+
+            case 'n':
+                result = transform_string(str);
+                printf("Строка после трансформации: %s\n", result);
+                break;
+
+            case 'c':
+                if (argc >= 4) {
+                    unsigned int seed = atoi(argv[2]);
+                    int num_strings = argc - 2;
+                    char* strings[num_strings];
+
+                    strings[0] = argv[1];
+
+                    for (int i = 1; i < num_strings; i++) {
+                        strings[i] = argv[i + 2];
+                    }
+
+                    result = concatenate_strings(seed, num_strings, strings);
+                    printf("Конкатинированная строка: %s\n", result);
+                }
+                break;
+
+            default:
+                printf("Invalid flag!\n");
+                break;
+        }
+
+        free(result);
+    }
+
+    return 0;
+}

@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <math.h>
+
+double equation(double x) {
+    return pow(x, 2) - 2;
+}
+
+double findRoot(double a, double b, double epsilon, double (*func)(double)) {
+    double fa = func(a);
+    double fb = func(b);
+
+    if (fa * fb > 0) {
+        printf("Корень не существует в данном интервале\n");
+        return 0;
+    }
+
+    double c, fc;
+
+    do {
+        c = (a + b) / 2;
+        fc = func(c);
+
+        if (fabs(fc) < epsilon) {
+            break;
+        }
+
+        if (fa * fc < 0) {
+            b = c;
+            fb = fc;
+        } else {
+            a = c;
+            fa = fc;
+        }
+    } while (b - a > epsilon);
+
+    return c;
+}
+
+int main() {
+    double a = 0;
+    double b = 2;
+    double epsilon = 0.0001;
+
+    double root = findRoot(a, b, epsilon, equation);
+
+    printf("Корень уравнения: %lf\n", root);
+
+    return 0;
+}

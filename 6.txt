@@ -1,0 +1,285 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdarg.h>
+#include <math.h>
+
+int convert_roman(char c) {
+    switch (c) {
+        case 'I': return 1;
+        case 'V': return 5;
+        case 'X': return 10;
+        case 'L': return 50;
+        case 'C': return 100;
+        case 'D': return 500;
+        case 'M': return 1000;
+        default: return -1;
+    }
+}
+
+int overfscanf(FILE* stream, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    int count = 0;
+    int i = 0;
+    while (format[i] != '\0') {
+        if (format[i] == '%') {
+            i++;
+            switch (format[i]) {
+                case 'R': {
+                    char roman[3];
+                    fscanf(stream, "%32s", roman);
+
+                    int length = strlen(roman);
+                    int number = 0;
+                    int prev_value = 0;
+
+                    for (int j = length - 1; j >= 0; j--) {
+                        int value = convert_roman(toupper(roman[j]));
+
+                        if (value < prev_value) {
+                            number -= value;
+                        } else {
+                            number += value;
+                            prev_value = value;
+                        }
+                    }
+
+                    int* result = va_arg(args, int*);
+                    *result = number;
+                    count++;
+                    break;
+                }
+                case 'Z': {
+                    char zendoforf[33];
+                    fscanf(stream, "%32s", zendoforf);
+
+                    int length = strlen(zendoforf);
+                    int number = 0;
+                    int fib1 = 1;
+                    int fib2 = 0;
+
+                    for (int j = 0; j <= length - 1; j++) {
+                        int coefficient = zendoforf[j] - '0';
+                        number += coefficient * fib1;
+                        int temp = fib1;
+                        fib1 = fib2 + fib1;
+                        fib2 = temp;
+                    }
+
+                    int* result = va_arg(args, int*);
+                    *result = number;
+                    count++;
+                    break;
+                }
+                case 'C': {
+                    int* result = va_arg(args, int*);
+                    int base = va_arg(args, int);
+
+                    char number[33];
+                    fscanf(stream, "%32s", number);
+
+                    int length = strlen(number);
+                    int num = 0;
+                    
+                    int boolCnt = (format[i+1] == 'V') ? 1 : 0;
+
+                    for (int j = length - 1; j >= 0; j--) {
+                        int digit;
+                        if (isalpha(number[j])) {
+                            if(boolCnt && number[j] == tolower(number[j])) {
+                                printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только заглавные латинские буквы\n");
+                                *result = -1;
+                                count++;
+                                return 0;
+                            } else if(!boolCnt && number[j] != tolower(number[j])) {
+                                printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только строчные латинские буквы\n");
+                                *result = -1;
+                                count++;
+                                return 0;
+                            }
+                            digit = tolower(number[j]) - 'a' + 10;
+                        } else {
+                            digit = number[j] - '0';
+                        }
+
+                        if (digit >= base) {
+                            digit = 0;
+                        }
+
+                        num += digit * pow(base, length - j - 1);
+                    }
+
+                    *result = num;
+                    count++;
+                    break;
+                }
+                default:
+                    if (format[i] == toupper(format[i])) {
+                        break;
+                    } else {
+                        int number;
+                        fscanf(stream, "%d", &number);
+
+                        int* result = va_arg(args, int*);
+                        *result = number;
+                        count++;
+                        break;
+                    }
+            }
+        } else {
+            i++;
+        }
+    }
+
+    va_end(args);
+    return count;
+}
+
+int oversscanf(const char* str, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    int count = 0, i = 0;
+
+    while (format[i] != '\0') {
+        if (format[i] == '%') {
+            i++;
+            switch (format[i]) {
+                case 'R': {
+                    char roman[1024];
+                  //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+                    sscanf(str, "%32s", roman);
+
+                    int length = strlen(roman);
+                    int number = 0;
+                    int prevValue = 0;
+
+                    for (int j = length - 1; j >= 0; j--) {
+                        int value = convert_roman(toupper(roman[j]));
+
+                        if (value < prevValue) {
+                            number -= value;
+                        } else {
+                            number += value;
+                            prevValue = value;
+                        }
+                    }
+
+                    int* result = va_arg(args, int*);
+                    *result = number;
+                    count++;
+                    break;
+                }
+                case 'Z': {
+                    char zendoforf[33];
+                    sscanf(str, "%32s", zendoforf);
+
+                    int length = strlen(zendoforf);
+                    int number = 0;
+                    int fib1 = 1;
+                    int fib2 = 0;
+
+                    for (int j = 0; j <= length - 1; j++) {
+                        int coefficient = zendoforf[j] - '0';
+                        number += coefficient * fib1;
+                        int temp = fib1;
+                        fib1 = fib2 + fib1;
+                        fib2 = temp;
+                    }
+
+                    int* result = va_arg(args, int*);
+                    *result = number;
+                    count++;
+                    break;
+                }
+                case 'C': {
+                    int* result = va_arg(args, int*);
+                    int base = va_arg(args, int);
+                    
+                    
+                    char number[1024];
+                    sscanf(str, "%32s", number);
+
+                    int length = strlen(number);
+                    int num = 0;
+
+                    int boolCnt = (format[i+1] == 'V') ? 1 : 0;
+
+                    for (int j = length - 1; j >= 0; j--) {
+                        int digit;
+                        if (isalpha(number[j])) {
+                            if(boolCnt && number[j] == tolower(number[j])) {
+                                printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только заглавные латинские буквы\n");
+                                *result = -1;
+                                count++;
+                                return 0;
+                            } else if(!boolCnt && number[j] != tolower(number[j])) {
+                                printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только строчные латинские буквы\n");
+                                *result = -1;
+                                count++;
+                                return 0;
+                            }
+                            digit = tolower(number[j]) - 'a' + 10;
+                        } else {
+                            digit = number[j] - '0';
+                        }
+
+                        if (digit >= base) {
+                            digit = 0;
+                        }
+
+                        num += digit * pow(base, length - j - 1);
+                    }
+
+                    *result = num;
+                    count++;
+                    break;
+                }
+                default:
+                    if (format[i] == tolower(format[i])) {
+                     break;
+                    } else {
+                        int number;
+                        sscanf(str, "%d", &number);
+
+                        int* result = va_arg(args, int*);
+                        *result = number;
+                     count++;
+                     break;
+                    }
+            }
+        } else {
+            i++;
+        }
+    }
+
+    va_end(args);
+
+    return count;
+}
+
+int main() {
+    FILE *file = fopen("input.txt", "r");
+    int num1, num2, num3, num4;
+    // overfscanf(file, "%Ro", &num1);
+    // overfscanf(file, "%Zr", &num2);
+    // overfscanf(file, "%Cv", &num3, 13);
+    overfscanf(file, "%CV", &num4, 16);
+    printf("Num1: %d\n", num1);  // выводится целое число, записанное римскими цифрами
+    printf("Num2: %u\n", num2);  // выводится целое число, записанное в цекендорфовом представлении
+    printf("Num3: %d\n", num3);  // выводится целое число, записанное в системе счисления с основанием 10
+    printf("Num4: %d\n", num4);  // выводится целое число, записанное в системе счисления с основанием 16
+    fclose(file);
+
+    oversscanf("MXV", "%Ro", &num1);
+    oversscanf("1010001", "%Zr", &num2);
+    oversscanf("34", "%Cv", &num3, 13);
+    printf("Num1: %d\n", num1);  // выводится целое число, записанное римскими цифрами
+    printf("Num2: %u\n", num2);  // выводится целое число, записанное в цекендорфовом представлении
+    printf("Num3: %d\n", num3);  // выводится целое число, записанное в системе счисления с основанием 10
+
+    return 0;
+}

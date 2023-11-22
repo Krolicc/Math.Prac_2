@@ -1,0 +1,127 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+
+int convert_roman(char c) {
+    switch (c) {
+        case 'I': return 1;
+        case 'V': return 5;
+        case 'X': return 10;
+        case 'L': return 50;
+        case 'C': return 100;
+        case 'D': return 500;
+        case 'M': return 1000;
+        default: return -1;
+    }
+}
+
+void print_roman(int num) {
+    // Логика печати числа в римской системе счисления
+    // ...
+}
+
+void print_zr(unsigned int num) {
+    // Логика печати числа в заданной системе счисления
+    // ...
+}
+
+char digit_to_char(int digit) {
+    return digit + '0';
+}
+
+void print_cv(int num, int base) {
+    // Логика печати числа в указанной системе счисления
+    // ...
+}
+
+void print_to(char* str, int num, int base) {
+    // Перевод числа в указанную систему счисления и запись его в строку
+    // ...
+}
+
+void overfprintf(FILE* stream, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    char* fp = (char*)format;
+    while (*fp) {
+        if (*fp == '%') {
+            fp++;
+            switch (*fp) {
+                case 'R':
+                    print_roman(va_arg(args, int));
+                    break;
+                case 'Z':
+                    print_zr(va_arg(args, unsigned int));
+                    break;
+                case 'C':
+                    print_cv(va_arg(args, int), va_arg(args, int));
+                    break;
+                case 'T':
+                    print_to(va_arg(args, char*), va_arg(args, int), va_arg(args, int));
+                    break;
+                default:
+                    fputc(*fp, stream);
+                    break;
+            }
+        } else {
+            fputc(*fp, stream);
+        }
+        fp++;
+    }
+    va_end(args);
+}
+
+void oversprintf(char* str, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    char* sp = str;
+    const char* fp = format;
+    while (*fp) {
+        if (*fp == '%') {
+            fp++;
+            switch (*fp) {
+                case 'R':
+                    print_roman(va_arg(args, int));
+                    break;
+                case 'Z':
+                    print_zr(va_arg(args, unsigned int));
+                    break;
+                case 'C':
+                    print_cv(va_arg(args, int), va_arg(args, int));
+                    break;
+                case 'T':
+                    print_to(sp, va_arg(args, int), va_arg(args, int));
+                    sp += strlen(sp);
+                    fp++;
+                    continue;
+                default:
+                    *sp = *fp;
+                    sp++;
+                    break;
+            }
+        } else {
+            *sp = *fp;
+            sp++;
+        }
+        fp++;
+    }
+    *sp = '\0';
+    va_end(args);
+}
+
+int main() {
+    int num = 42;
+    char str[100];
+
+    overfprintf(stdout, "Roman Number: %R\n", num);
+    overfprintf(stdout, "Zr Number: %Z\n", num);
+    overfprintf(stdout, "Custom Base Lowercase: %C\n", num, 16);
+    overfprintf(stdout, "Custom Base Uppercase: %C\n", num, 16);
+    oversprintf(str, "Destructuring Memory Integer: %T\n", num);
+    printf("%s\n", str);
+    oversprintf(str, "Destructuring Memory Float: %T\n", 3.14);
+    printf("%s\n", str);
+
+    return 0;
+}

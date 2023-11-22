@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <stdarg.h>
+
+int isConvexPolygon(int vertices, ...) {
+    va_list args;
+    va_start(args, vertices);
+
+    if (vertices < 3) {
+        return 0;
+    }
+
+    double x1, y1, x2, y2, x3, y3;
+
+    x1 = va_arg(args, double);
+    y1 = va_arg(args, double);
+    x2 = va_arg(args, double);
+    y2 = va_arg(args, double);
+    x3 = va_arg(args, double);
+    y3 = va_arg(args, double);
+
+    double crossProduct = (x2-x1)*(y3-y2) - (y2-y1)*(x3-x2);
+
+    for (int i = 3; i < vertices; i++) {
+        double xi, yi;
+        xi = va_arg(args, double);
+        yi = va_arg(args, double);
+
+        double nextCrossProduct = (x3-x2)*(yi-y3) - (y3-y2)*(xi-x3);
+
+        if ((crossProduct > 0 && nextCrossProduct < 0) || (crossProduct < 0 && nextCrossProduct > 0)) {
+            va_end(args);
+            return 0;
+        }
+
+        x1 = x2;
+        y1 = y2;
+        x2 = x3;
+        y2 = y3;
+        x3 = xi;
+        y3 = yi;
+
+        crossProduct = nextCrossProduct;
+    }
+
+    va_end(args);
+
+    return 1;
+}
+
+
+double evaluatePolynomial(double x, int degree, ...) {
+    va_list args;
+    va_start(args, degree);
+    double result = 0.0;
+
+    for (int i = degree; i >= 0; i--) {
+        double coefficient = va_arg(args, double);
+        result = result * x + coefficient;
+    }
+
+    va_end(args);
+
+    return result;
+}
+
+
+int main() {
+    int convex = isConvexPolygon(5, 0.0, 0.0, 3.0, 0.0, 0.0, 3.0, 1.0, 1.0, 2.0);
+
+    if (convex) {
+        printf("Многоугольник выпуклый\n");
+    } else {
+        printf("Многоугольник не выпуклый\n");
+    }
+
+    double value = evaluatePolynomial(2.0, 3, 1.0, -2.0, 0.0, 3.0);
+    printf("Значение многочлена: %f\n", value);
+
+    return 0;
+}

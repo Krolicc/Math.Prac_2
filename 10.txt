@@ -1,0 +1,61 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+
+double* polynomial_expansion(double epsilon, double a, int degree, ...) {
+    va_list args;
+    va_start(args, degree);
+
+    double* coefficients = (double*)malloc((degree + 1) * sizeof(double));
+
+    for (int i = 0; i <= degree; i++) {
+        coefficients[i] = va_arg(args, double);
+    }
+
+    double* temp = (double*)malloc((degree + 1) * sizeof(double));
+    double x_minus_a = 1.0;
+    double prev_sum = 0.0;
+    double sum = 0.0;
+    int iterations = 0;
+
+    do {
+        iterations++;
+        for (int i = 0; i <= degree; i++) {
+            temp[i] = coefficients[i];
+        }
+
+        for (int i = 0; i < degree; i++) {
+            coefficients[i] = temp[i] - prev_sum * (a * temp[i + 1] - temp[i]) / x_minus_a;
+        }
+
+        x_minus_a *= (a * (double)degree - 1.0);
+        prev_sum = sum;
+        sum = 0.0;
+        for (int i = 0; i <= degree; i++) {
+            sum += coefficients[i];
+        }
+    } while (fabs(sum - prev_sum) > epsilon * fabs(prev_sum));
+
+    free(temp);
+
+    va_end(args);
+
+    return coefficients;
+}
+
+int main() {
+    double epsilon = 0.0001;
+    double a = 1.0;
+    int degree = 3;
+    double f0 = 1.0, f1 = 2.0, f2 = 3.0, f3 = 4.0;
+
+    double* coefficients = polynomial_expansion(epsilon, a, degree, f0, f1, f2, f3);
+
+    for (int i = 0; i <= degree; i++) {
+        printf("g%d = %f\n", i, coefficients[i]);
+    }
+
+    free(coefficients);
+
+    return 0;
+}

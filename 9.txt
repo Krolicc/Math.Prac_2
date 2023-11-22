@@ -1,0 +1,36 @@
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <math.h>
+
+bool hasFiniteRepresentation(int base, int count, ...) {
+    va_list args;
+    va_start(args, count);
+
+    for (int i = 0; i < count; i++) {
+        double number = va_arg(args, double);
+        double fractionalPart = number - (int)number;
+
+        while (fractionalPart != 0 && fractionalPart * base <= 1)
+            fractionalPart *= base;
+
+        if (fractionalPart - (int)fractionalPart <= 0.001) {
+            printf("%.3f имеет конечного представление в системе счисления с основанием %d\n", number, base);
+        } else {
+            printf("%.3f не имеет конечного представл. в системе счисления с основанием %d\n", number, base);
+        }
+    }
+
+    va_end(args);
+
+    return true;
+}
+
+int main() {
+    double a = 1.0/6.0;
+
+    hasFiniteRepresentation(2, 3, 0.5, 0.25, 0.1);
+    hasFiniteRepresentation(6, 2, a, 0.25);
+
+    return 0;
+}

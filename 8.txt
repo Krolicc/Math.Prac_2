@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+
+int convert_digit(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'a' && c <= 'z') {
+        return c - 'a' + 10;
+    } else if (c >= 'A' && c <= 'Z') {
+        return c - 'A' + 10;
+    }
+
+    return -1;
+}
+
+char convert_char(int digit) {
+    if (digit >= 0 && digit <= 9) {
+        return '0' + digit;
+    } else if (digit >= 10 && digit <= 35) {
+        return 'a' + digit - 10;
+    }
+
+    return '\0';
+}
+
+char* reverse_string(char* str) {
+    int len = strlen(str);
+    char* reversed = malloc(sizeof(char) * (len + 1));
+
+    for (int i = 0; i < len; ++i) {
+        reversed[i] = str[len - i - 1];
+    }
+
+    reversed[len] = '\0';
+
+    return reversed;
+}
+
+char* add_strings(char* num1, char* num2, int base) {
+    int len1 = strlen(num1);
+    int len2 = strlen(num2);
+    int count = 0;
+    int max_len = len1 > len2 ? len1 : len2;
+
+    char* sum = malloc(sizeof(char) * (max_len + 2));
+    char* res = malloc(sizeof(char) * (max_len + 2));
+    int carry = 0;
+    int i;
+    for (i = max_len - 1; i >= 0; --i) {
+        int digit1 = (i-(max_len - 1 - (len1 - 1)) >= 0) ? convert_digit(num1[i-(max_len-1-(len1-1))]) : 0;
+        int digit2 = (i-(max_len - 1 - (len2 - 1)) >= 0) ? convert_digit(num2[i-(max_len-1-(len2-1))]) : 0;
+        int digit_sum = digit1 + digit2 + carry;
+        if(digit_sum % base == 0 && digit_sum != 0) {
+            sum[max_len - 1 - i] = '0'; sum[max_len - 1 - i + 1] = '1'; count += 2;
+        } else {
+            sum[max_len - 1 - i] = convert_char(digit_sum % base); count++;
+        }
+        carry = digit_sum / base;
+    }
+
+    sum[i] = '\0';
+
+    for(int i = 0; i < count; i++)
+        res[i] = sum[count-1-i];
+
+
+    return res;
+}
+
+char* sum_numbers(int base, int count, ...) {
+    va_list args;
+    va_start(args, count);
+
+    char* sum = malloc(sizeof(char) * 4);
+    sum[0] = '0';
+    sum[1] = '\0';
+
+    for (int i = 0; i < count; ++i) {
+        char* number = va_arg(args, char*);
+        char* temp = sum;
+
+        sum = add_strings(sum, number, base);
+        free(temp);
+    }
+
+    va_end(args);
+
+    return sum;
+}
+
+int main() {
+    int base = 10;
+    char* num1 = "12";
+    char* num2 = "34";
+    char* num3 = "105";
+
+    char* result = sum_numbers(base, 3, num1, num2, num3);
+
+    printf("Result: %s\n", result);
+
+    free(result);
+
+    return 0;
+}

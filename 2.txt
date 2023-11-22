@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdarg.h>
+#include <math.h>
+
+double power(double x, int n) {
+    if (n == 0) {
+        return 1.0;
+    }
+    else if (n % 2 == 0) {
+        double half = power(x, n / 2);
+        return half * half;
+    }
+    else {
+        double half = power(x, (n - 1) / 2);
+        return x * half * half;
+    }
+}
+
+double averageGeometric(int n, ...) {
+    va_list args;
+    va_start(args, n);
+
+    double product = 1.0;
+
+    for (int i = 0; i < n; i++) {
+        double num = va_arg(args, double);
+        product *= num;
+    }
+
+    va_end(args);
+
+    double average = pow(product, 1.0 / n);
+    return average;
+}
+
+int main() {
+    double result = averageGeometric(3, 2.0, 4.5, 8.0);
+    printf("Average geometric: %f\n", result);
+
+    double base = 2.0;
+    int exponent = 5;
+
+    double result2 = power(base, exponent);
+    printf("%f в степени %d = %f\n", base, exponent, result2);
+
+    return 0;
+}
