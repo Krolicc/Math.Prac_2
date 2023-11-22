@@ -2,6 +2,35 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    VIOLATION_CONVEXITY,
+    INCORRECT_POINT_NUMBER_INPUT,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    FILE_CLOSING_ERROR,
+    MEMORY_ALLOCATION_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Нарушение выпуклости",
+        "Некорректное число точек, попробуйте ещё раз",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Ошибка выделения памяти",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 int convert_digit(char c) {
     if (c >= '0' && c <= '9') {
@@ -29,6 +58,11 @@ char* reverse_string(char* str) {
     int len = strlen(str);
     char* reversed = malloc(sizeof(char) * (len + 1));
 
+    if(reversed == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     for (int i = 0; i < len; ++i) {
         reversed[i] = str[len - i - 1];
     }
@@ -44,27 +78,37 @@ char* add_strings(char* num1, char* num2, int base) {
     int count = 0;
     int max_len = len1 > len2 ? len1 : len2;
 
-    char* sum = malloc(sizeof(char) * (max_len + 2));
-    char* res = malloc(sizeof(char) * (max_len + 2));
-    int carry = 0;
-    int i;
+    char* num_sum = malloc(sizeof(char) * (max_len + 1));
+
+    if(num_sum == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
+    char* res = malloc(sizeof(char) * (max_len + 1));
+
+    if(res == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
+    int carry = 0, i;
     for (i = max_len - 1; i >= 0; --i) {
         int digit1 = (i-(max_len - 1 - (len1 - 1)) >= 0) ? convert_digit(num1[i-(max_len-1-(len1-1))]) : 0;
         int digit2 = (i-(max_len - 1 - (len2 - 1)) >= 0) ? convert_digit(num2[i-(max_len-1-(len2-1))]) : 0;
         int digit_sum = digit1 + digit2 + carry;
         if(digit_sum % base == 0 && digit_sum != 0) {
-            sum[max_len - 1 - i] = '0'; sum[max_len - 1 - i + 1] = '1'; count += 2;
+            num_sum[max_len - 1 - i] = '0'; num_sum[max_len - 1 - i + 1] = '1'; count += 2;
         } else {
-            sum[max_len - 1 - i] = convert_char(digit_sum % base); count++;
+            num_sum[max_len - 1 - i] = convert_char(digit_sum % base); count++;
         }
         carry = digit_sum / base;
     }
 
-    sum[i] = '\0';
+    num_sum[i] = '\0';
 
-    for(int i = 0; i < count; i++)
-        res[i] = sum[count-1-i];
-
+    for(i = 0; i < count; i++)
+        res[i] = num_sum[count-1-i];
 
     return res;
 }
@@ -74,6 +118,12 @@ char* sum_numbers(int base, int count, ...) {
     va_start(args, count);
 
     char* sum = malloc(sizeof(char) * 4);
+
+    if(sum == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     sum[0] = '0';
     sum[1] = '\0';
 
@@ -91,14 +141,17 @@ char* sum_numbers(int base, int count, ...) {
 }
 
 int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
     int base = 10;
-    char* num1 = "12";
-    char* num2 = "34";
-    char* num3 = "105";
+    char* num1 = "133";
+    char* num2 = "29";
+    char* num3 = "23";
 
     char* result = sum_numbers(base, 3, num1, num2, num3);
 
-    printf("Result: %s\n", result);
+    printf("Результат: %s\n", result);
 
     free(result);
 
