@@ -1,9 +1,41 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
+#include <Windows.h>
 
-bool hasFiniteRepresentation(int base, int count, ...) {
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_ARGUMENT_INPUT,
+    NON_EXISTENT_REPRESENTATION,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    FILE_CLOSING_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный аргумент, попробуйте ещё раз",
+        "Нет конечного представление",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Неизвестная ошибка, что-то пошло не так"
+};
+
+void printMessage(int isCorrectRepresentation, double number, int base) {
+    if (isCorrectRepresentation) {
+        printf("%.3f имеет конечного представление в системе счисления с основанием %d\n", number, base);
+    } else {
+        printf("%.3f не имеет конечного представл. в системе счисления с основанием %d\n", number, base);
+    }
+}
+
+int hasFiniteRepresentation(int base, int count, ...) {
     va_list args;
     va_start(args, count);
 
@@ -15,22 +47,29 @@ bool hasFiniteRepresentation(int base, int count, ...) {
             fractionalPart *= base;
 
         if (fractionalPart - (int)fractionalPart <= 0.001) {
-            printf("%.3f имеет конечного представление в системе счисления с основанием %d\n", number, base);
+            printMessage(1, number, base);
         } else {
-            printf("%.3f не имеет конечного представл. в системе счисления с основанием %d\n", number, base);
+            if (number < 0.0) exit(INCORRECT_ARGUMENT_INPUT);
+
+            printMessage(0, number, base);
         }
     }
 
     va_end(args);
 
-    return true;
+    return SUCCESS;
 }
 
 int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
     double a = 1.0/6.0;
 
-    hasFiniteRepresentation(2, 3, 0.5, 0.25, 0.1);
-    hasFiniteRepresentation(6, 2, a, 0.25);
+    hasFiniteRepresentation(2, 3, 0.5, 0.25, 0.0);
+    hasFiniteRepresentation(6, 2, a, 'a');
 
-    return 0;
+
+
+    return SUCCESS;
 }
