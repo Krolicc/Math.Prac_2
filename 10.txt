@@ -1,6 +1,30 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <math.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    FILE_CLOSING_ERROR,
+    MEMORY_ALLOCATION_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Ошибка выделения памяти",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 double* polynomial_expansion(double epsilon, double a, int degree, ...) {
     va_list args;
@@ -8,11 +32,21 @@ double* polynomial_expansion(double epsilon, double a, int degree, ...) {
 
     double* coefficients = (double*)malloc((degree + 1) * sizeof(double));
 
+    if(coefficients == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     for (int i = 0; i <= degree; i++) {
         coefficients[i] = va_arg(args, double);
     }
 
     double* temp = (double*)malloc((degree + 1) * sizeof(double));
+
+    if(temp == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
     double x_minus_a = 1.0;
     double prev_sum = 0.0;
     double sum = 0.0;
@@ -44,6 +78,9 @@ double* polynomial_expansion(double epsilon, double a, int degree, ...) {
 }
 
 int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
     double epsilon = 0.0001;
     double a = 1.0;
     int degree = 3;
@@ -57,5 +94,5 @@ int main() {
 
     free(coefficients);
 
-    return 0;
+    return SUCCESS;
 }
