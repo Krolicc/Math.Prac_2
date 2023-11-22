@@ -1,11 +1,37 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_INPUT,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    FILE_CLOSING_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод числа, попробуйте ещё раз",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 int my_strncmp(const char* str1, const char* str2, size_t n)
 {
     const char* end = str1+n;
     int result = 0;
-    for(;result == 0 && str1 != end && (*str1 || *str2); result = *(str1++)-*(str2++));
+    for(; result == 0 && str1 != end && (*str1 || *str2); result = *(str1++)-*(str2++));
     return result;
 }
 
@@ -15,11 +41,12 @@ void search_substring(const char* substring, int file_count, ...) {
 
     for (int i = 0; i < file_count; i++) {
         const char* file_path = va_arg(args, const char*);
+
         FILE* file = fopen(file_path, "r");
 
         if (file == NULL) {
-            printf("Error opening file: %s\n", file_path);
-            continue;
+//            printf("%s: %s\n", errorMessages[FILE_OPENING_ERROR], file_path);
+            exit(FILE_OPENING_ERROR);
         }
 
         char line[100];
@@ -31,7 +58,7 @@ void search_substring(const char* substring, int file_count, ...) {
 
             while (*ptr) {
                 if (my_strncmp(ptr, substring, strlen(substring)) == 0) {
-                    printf("File: %s | Line: %d | Position: %d\n", file_path, line_number, index+1);
+                    printf("Файл: %s | Строка: %d | Позиция: %d\n", file_path, line_number, index+1);
                 }
 
                 index++;
@@ -41,7 +68,10 @@ void search_substring(const char* substring, int file_count, ...) {
             line_number++;
         }
 
-        fclose(file);
+        if ( fclose (file) == EOF) {
+//            printf("%s", errorMessages[FILE_CLOSING_ERROR]);
+            exit(FILE_CLOSING_ERROR);
+        }
     }
 
     va_end(args);
@@ -49,7 +79,10 @@ void search_substring(const char* substring, int file_count, ...) {
 
 
 int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
     search_substring("ew", 2, "file1.txt", "file2.txt");
 
-    return 0;
+    return SUCCESS;
 }
