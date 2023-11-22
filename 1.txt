@@ -2,6 +2,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_NUMBER_INPUT,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_NUMBER_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    FILE_CLOSING_ERROR,
+    MEMORY_ALLOCATION_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод числа, попробуйте ещё раз",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Некорректное кол-во аргументов, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Ошибка выделения памяти",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 char* calculate_length(const char* str) {
     int length = 0;
@@ -13,6 +40,12 @@ char* calculate_length(const char* str) {
     }
 
     char* result = (char*)malloc(length * sizeof(char) + 1);
+
+    if(result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     sprintf(result, "%d", length);
     return result;
 }
@@ -27,6 +60,12 @@ char* reverse_string(const char* str) {
     }
 
     char* result = (char*)malloc(length * sizeof(char) + 1);
+
+    if(result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     const char* q = str + length - 1;
     char* r = result;
 
@@ -50,6 +89,12 @@ char* convert_to_uppercase(const char* str) {
     }
 
     char* result = (char*)malloc(length * sizeof(char) + 1);
+
+    if(result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     const char* q = str;
     char* r = result;
 
@@ -79,6 +124,12 @@ char* transform_string(const char* str) {
 
 
     char* result = (char*)malloc(length * sizeof(char) + 1);
+
+    if(result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     char* digit_ptr = result;
 
     int boolIndicator = 1;
@@ -99,7 +150,7 @@ char* transform_string(const char* str) {
                 digit_ptr++;
             }
 
-            if(boolIndicator == 3) boolIndicator = -1;
+            if (boolIndicator == 3) boolIndicator = -1;
 
             strCopy++;
         }
@@ -122,6 +173,12 @@ char* concatenate_strings(unsigned int seed, int num_strings, char* strings[]) {
     }
 
     char* result = (char*)malloc(length * sizeof(char) + 1);
+
+    if(result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
     char* p = result;
 
     for (int i = 0; i < num_strings; i++) {
@@ -140,16 +197,20 @@ char* concatenate_strings(unsigned int seed, int num_strings, char* strings[]) {
     return result;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
     char* result = NULL;
 
-    int argc = 7;
+    if (argc > 2) {
+        if(strchr("-/", argv[1][0]) == NULL) {
+            printf("%s", errorMessages[INCORRECT_FLAG_INPUT]);
+            return INCORRECT_FLAG_INPUT;
+        }
 
-    char* argv[] = {"-n", "asd123", "3", "qqwe", "1223", "!#@", "}"};
-
-    if (argc >= 3) {
-        char flag = argv[0][1];
-        char* str = argv[1];
+        char flag = argv[1][1];
+        char* str = argv[2];
 
         switch (flag) {
             case 'l':
@@ -186,16 +247,21 @@ int main() {
 
                     result = concatenate_strings(seed, num_strings, strings);
                     printf("Конкатинированная строка: %s\n", result);
+                } else {
+                    printf("%s", errorMessages[INCORRECT_NUMBER_ARGUMENTS_INPUT]);
+                    return INCORRECT_NUMBER_ARGUMENTS_INPUT;
                 }
                 break;
-
             default:
-                printf("Invalid flag!\n");
-                break;
+                printf("%s", errorMessages[INCORRECT_FLAG_INPUT]);
+                return INCORRECT_FLAG_INPUT;
         }
 
         free(result);
+    } else {
+        printf("%s", errorMessages[INCORRECT_NUMBER_ARGUMENTS_INPUT]);
+        return INCORRECT_NUMBER_ARGUMENTS_INPUT;
     }
 
-    return 0;
+    return SUCCESS;
 }
