@@ -4,27 +4,13 @@
 
 typedef enum {
     SUCCESS = 0,
-    VIOLATION_CONVEXITY,
-    INCORRECT_POINT_NUMBER_INPUT,
-    INCORRECT_FLAG_INPUT,
     INCORRECT_NUMBER_ARGUMENTS_INPUT,
-    FILE_OPENING_ERROR,
-    FILE_READING_ERROR,
-    FILE_WRITING_ERROR,
-    FILE_CLOSING_ERROR,
     UNKNOWN_ERROR
 } ErrorCode;
 
 static const char* errorMessages[] = {
         "Всё хорошо",
-        "Нарушение выпуклости",
-        "Некорректное число точек, попробуйте ещё раз",
-        "Некорректный ввод флага, попробуйте ещё раз",
         "Некорректное кол-во аргументов, попробуйте ещё раз",
-        "Ошибка открытия файла",
-        "Ошибка чтения файла",
-        "Ошибка записи файла",
-        "Ошибка закрытия файла",
         "Неизвестная ошибка, что-то пошло не так"
 };
 
@@ -32,18 +18,23 @@ double equation(double x) {
     return pow(x, 2) - 2;
 }
 
-void printMessage( char *string) {
-    printf("%s", string);
+char* convertToString(double num, char *result) {
+    char resultBeforePoint[100], resultAfterPoint[100];
+    int separator = (int)1e9, intNum = (int)(num*separator);
+
+    itoa(intNum%separator, resultAfterPoint, 10);
+    itoa(intNum/separator, resultBeforePoint, 10);
+
+    sprintf(result, "%s.%s", resultBeforePoint, resultAfterPoint);
+
+    return result;
 }
 
-double findRoot(double a, double b, double epsilon, double (*func)(double)) {
+char* findRoot(double a, double b, double epsilon, double (*func)(double), char *result) {
     double fa = func(a);
     double fb = func(b);
 
-    if (fa * fb > 0) {
-        printMessage("Корень не существует в данном интервале\n");
-        return -1;
-    }
+    if (fa * fb > 0) return "ERR!";
 
     double c, fc;
 
@@ -51,9 +42,7 @@ double findRoot(double a, double b, double epsilon, double (*func)(double)) {
         c = (a + b) / 2;
         fc = func(c);
 
-        if (fabs(fc) < epsilon) {
-            break;
-        }
+        if (fabs(fc) < epsilon) break;
 
         if (fa * fc < 0) {
             b = c;
@@ -64,19 +53,26 @@ double findRoot(double a, double b, double epsilon, double (*func)(double)) {
         }
     } while (b - a > epsilon);
 
-    return c;
+    convertToString(c, result);
+
+    return result;
 }
 
 int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
-    double a = 0;
-    double b = 2;
-    double epsilon = 0.0001;
 
-    double root = findRoot(a, b, epsilon, equation);
+    double a = 0, b = 2, epsilon = 0.0001;
 
-    printf("Корень уравнения: %lf\n", root);
+    char result[200];
+
+    for(int i=0; i<200; i++)
+        result[i] = '\0';
+
+    char* root = findRoot(a, b, epsilon, equation, result);
+
+    if(strcmp(root, "ERR!") == 0) printf("Корня не существует");
+    else printf("Корень уравнения: %s\n", root);
 
     return SUCCESS;
 }
