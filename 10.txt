@@ -26,73 +26,88 @@ static const char* errorMessages[] = {
         "Неизвестная ошибка, что-то пошло не так"
 };
 
-double* polynomial_expansion(double epsilon, double a, int degree, ...) {
-    va_list args;
-    va_start(args, degree);
-
+double* polynomial_decomposition(double epsilon, double a, int degree, ...)
+{
+    double* result = (double*)malloc((degree + 1) * sizeof(double));
+    if (result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
     double* coefficients = (double*)malloc((degree + 1) * sizeof(double));
-
-    if(coefficients == NULL) {
+    if (coefficients == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+    double* powers = (double*)malloc((degree + 1) * sizeof(double));
+    if (powers == NULL) {
         printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
         exit(MEMORY_ALLOCATION_ERROR);
     }
 
+
+    // Получение всех коэффициентов многочлена из аргументов переменной длины
+    va_list args;
+    va_start(args, degree);
     for (int i = 0; i <= degree; i++) {
         coefficients[i] = va_arg(args, double);
     }
-
-    double* temp = (double*)malloc((degree + 1) * sizeof(double));
-
-    if(temp == NULL) {
-        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
-        exit(MEMORY_ALLOCATION_ERROR);
-    }
-    double x_minus_a = 1.0;
-    double prev_sum = 0.0;
-    double sum = 0.0;
-    int iterations = 0;
-
-    do {
-        iterations++;
-        for (int i = 0; i <= degree; i++) {
-            temp[i] = coefficients[i];
-        }
-
-        for (int i = 0; i < degree; i++) {
-            coefficients[i] = temp[i] - prev_sum * (a * temp[i + 1] - temp[i]) / x_minus_a;
-        }
-
-        x_minus_a *= (a * (double)degree - 1.0);
-        prev_sum = sum;
-        sum = 0.0;
-        for (int i = 0; i <= degree; i++) {
-            sum += coefficients[i];
-        }
-    } while (fabs(sum - prev_sum) > epsilon * fabs(prev_sum));
-
-    free(temp);
-
     va_end(args);
 
-    return coefficients;
+    // Инициализация результирующего многочлена нулевыми значениями коэффициентов
+    for (int i = 0; i < degree + 1; i++) {
+        result[i] = 0.0;
+        powers[i] = i;
+    }
+
+    // Вычисление коэффициентов результирующего многочлена
+
+    for(int i = 0; i < degree + 1; i++) {
+        for(int j = 0; j < degree + 1; j++) {
+            result[i] += coefficients[j] * pow(a,powers[j]);
+            coefficients[j] = coefficients[j] * powers[j];
+            if(powers[j] != 0) powers[j] -= 1;
+        }
+
+        for(int j = 1; j < i + 1; j++) {
+            result[i] /= j;
+        }
+    }
+
+    // Проверка точности и обнуление коэффициентов многочлена с низкими значениями
+    for (int i = degree; i >= 0; i--) {
+        if (fabs(result[i]) < epsilon) {
+            result[i] = 0.0;
+        } else {
+            break;
+        }
+    }
+
+    free(coefficients);
+    free(powers);
+
+    return result;
 }
 
+// Пример работы программы
 int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    double epsilon = 0.0001;
-    double a = 1.0;
-    int degree = 3;
-    double f0 = 1.0, f1 = 2.0, f2 = 3.0, f3 = 4.0;
+    double epsilon = 0.000000000001;  // Точность
+    double a = 2.0;             // Значение a
+    int degree = 3;             // Степень многочлена
+    double f0 = 2.0, f1 = -2.0, f2 = 2.0, f3 = 2.0;  // Коэффициенты многочлена
 
-    double* coefficients = polynomial_expansion(epsilon, a, degree, f0, f1, f2, f3);
+    // Вызов функции переразложения многочлена
+    double* result = polynomial_decomposition(epsilon, a, degree, f0, f1, f2, f3);
 
+    // Вывод коэффициентов результирующего многочлена
+    printf("Коэффициенты результирующего многочлена:\n");
     for (int i = 0; i <= degree; i++) {
-        printf("g%d = %f\n", i, coefficients[i]);
+        printf("g%d = %lf\n", i, result[i]);
     }
 
-    free(coefficients);
+    free(result);
 
     return SUCCESS;
 }
