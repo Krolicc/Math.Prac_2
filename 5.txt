@@ -1,127 +1,510 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_WRITING_ERROR,
+    MEMORY_ALLOCATION_ERROR,
+    FILE_CLOSING_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
 
-int convert_roman(char c) {
-    switch (c) {
-        case 'I': return 1;
-        case 'V': return 5;
-        case 'X': return 10;
-        case 'L': return 50;
-        case 'C': return 100;
-        case 'D': return 500;
-        case 'M': return 1000;
-        default: return -1;
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректные аргументы, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка записи файла",
+        "Ошибка закрытия файла",
+        "Ошибка выделения памяти",
+        "Неизвестная ошибка, что-то пошло не так"
+};
+
+char* convert_uppercase_to_lowercase(char *str, int lenght) {
+    char* result = malloc(sizeof(char) * lenght);
+
+    for (int i = 0; i < lenght; i++)
+        result[i] = tolower(str[i]);
+
+    return result;
+}
+
+char* decimalToRoman(int num) {
+    char* roman[] = {"M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+    int decimal[] = {1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1};
+    char* result = malloc(sizeof(char) * 20);
+    if (result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
     }
+    strcpy(result, "");
+
+    for (int i = 0; i < 13; i++) {
+        while (num >= decimal[i]) {
+            strcat(result, roman[i]);
+            num -= decimal[i];
+        }
+    }
+
+    return result;
 }
 
-void print_roman(int num) {
-    // Логика печати числа в римской системе счисления
-    // ...
+char* fibonacciZeckendorf(unsigned int num) {
+    unsigned int fib[47];
+    fib[0] = 1;
+    fib[1] = 2;
+
+    for (int i = 2; i < 47; i++) {
+        fib[i] = fib[i - 1] + fib[i - 2];
+    }
+
+    int i = 46;
+    char *result = malloc(sizeof(char) * 100);
+    if (result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+    strcpy(result, "");
+
+    while (i >= 0) {
+        if (fib[i] <= num) {
+            strcat(result, "1");
+            num -= fib[i];
+        } else {
+            strcat(result, "0");
+        }
+        i--;
+    }
+
+//    strcat(result, "1");
+
+    return result;
 }
 
-void print_zr(unsigned int num) {
-    // Логика печати числа в заданной системе счисления
-    // ...
+char* decimalToBase(int num, int base) {
+    if (base < 2 || base > 36) {
+        base = 10;
+    }
+
+    char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+    char* result = malloc(sizeof(char) * 100);
+    if (result == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+    int count = 0;
+    int negative = 0;
+
+    if (num < 0) {
+        negative = 1;
+        num = -num;
+    }
+
+    if (num == 0) {
+        return "0";
+    }
+
+    while (num > 0) {
+        result[count++] = digits[num % base];
+        num /= base;
+    }
+
+    if (negative) {
+        result[count++] = '-';
+    }
+
+    result[count] = '\0';
+
+    int i;
+    for (i = 0; i < count / 2; i++) {
+        char temp = result[i];
+        result[i] = result[count - i - 1];
+        result[count - i - 1] = temp;
+    }
+
+    return result;
 }
 
-char digit_to_char(int digit) {
-    return digit + '0';
+char* baseToDecimal(char* num, int base) {
+    if (base < 2 || base > 36) {
+        base = 10;
+    }
+
+    char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+    int result = 0;
+    int negative = 0;
+
+    if (num[0] == '-') {
+        negative = 1;
+        num++;
+    }
+
+    while (*num != '\0') {
+        char* digit = strchr(digits, *num++);
+        if (digit != NULL) {
+            result = result * base + (digit - digits);
+        }
+    }
+
+    if (negative) {
+        result = -result;
+    }
+
+    char* decimalResult = malloc(sizeof(char) * 100);
+
+    if (decimalResult == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+
+    sprintf(decimalResult, "%d", result);
+
+    return decimalResult;
 }
 
-void print_cv(int num, int base) {
-    // Логика печати числа в указанной системе счисления
-    // ...
+char* reverseZecendorfNum(char *str) {
+    char* zeckendorfNum = malloc(sizeof(char)*strlen(str) + 2);
+    if (zeckendorfNum == NULL) {
+        printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
+        exit(MEMORY_ALLOCATION_ERROR);
+    }
+    int i;
+    for(i=0; i<strlen(str); i++)
+        zeckendorfNum[i] = str[strlen(str)-i-1];
+
+    zeckendorfNum[i] = '1'; zeckendorfNum[i+1] = '\0';
+    return zeckendorfNum;
 }
 
-void print_to(char* str, int num, int base) {
-    // Перевод числа в указанную систему счисления и запись его в строку
-    // ...
-}
+void overfprintf(FILE* stream, char* format, ...) {
 
-void overfprintf(FILE* stream, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    char* fp = (char*)format;
-    while (*fp) {
-        if (*fp == '%') {
-            fp++;
-            switch (*fp) {
+
+    while (*format) {
+        if (*format == '%') {
+            format++;
+            switch (*format) {
                 case 'R':
-                    print_roman(va_arg(args, int));
+                    format++;
+                    if (*format == 'o') {
+                        int num = va_arg(args, int);
+                        char* romanNum = decimalToRoman(num);
+                        fputs(romanNum, stream);
+                        free(romanNum);
+                    }
                     break;
                 case 'Z':
-                    print_zr(va_arg(args, unsigned int));
+                    format++;
+                    if (*format == 'r') {
+                        unsigned int num = va_arg(args, unsigned int);
+
+                        char* zeckendorfNum = fibonacciZeckendorf(num);
+
+                        while(zeckendorfNum[0] == '0') {
+                            for (int i = 0; i < strlen(zeckendorfNum) - 1; i++)
+                                zeckendorfNum[i] = zeckendorfNum[i + 1];
+                            zeckendorfNum[strlen(zeckendorfNum)-1] = '\0';
+                        }
+
+                        zeckendorfNum = reverseZecendorfNum(zeckendorfNum);
+
+                        fputs(zeckendorfNum, stream);
+                        free(zeckendorfNum);
+                    }
                     break;
                 case 'C':
-                    print_cv(va_arg(args, int), va_arg(args, int));
+                    format++;
+                    if (*format == 'v') {
+                        int num = va_arg(args, int);
+                        int base = va_arg(args, int);
+                        char* baseNum = decimalToBase(num, base);
+                        fputs(baseNum, stream);
+                        free(baseNum);
+                    } else if (*format == 'V') {
+                        int num = va_arg(args, int);
+                        int base = va_arg(args, int);
+                        char* baseNum = decimalToBase(num, base);
+                        for (int i = 0; i < strlen(baseNum); i++) {
+                            baseNum[i] = toupper(baseNum[i]);
+                        }
+                        fputs(baseNum, stream);
+                        free(baseNum);
+                    }
                     break;
                 case 'T':
-                    print_to(va_arg(args, char*), va_arg(args, int), va_arg(args, int));
+                    format++;
+                    if (*format == 'o') {
+                        char* numb = va_arg(args, char*);
+                        int base = va_arg(args, int);
+
+                        for(int i=0; i<strlen(numb); i++) {
+                            if(numb[i] > 96 && numb[i] < 123 || isdigit(numb[i])) {}
+                            else {
+                                if (fclose (stream) == EOF)
+                                    printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+
+                                printf ("%s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+                                exit(INCORRECT_ARGUMENTS_INPUT);
+                            }
+                        }
+
+                        char* decimalNum = baseToDecimal(numb, base);
+                        fputs(decimalNum, stream);
+                        free(decimalNum);
+                    } else if (*format == 'O') {
+                        char* num = va_arg(args, char*);
+                        int base = va_arg(args, int);
+
+                        for(int i=0; i<strlen(num); i++) {
+                            if(num[i] > 64 && num[i] < 91 || isdigit(num[i])) {}
+                            else {
+                                if (fclose (stream) == EOF)
+                                    printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+
+                                printf ("%s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+                                exit(INCORRECT_ARGUMENTS_INPUT);
+                            }
+                        }
+
+                        char* decimalNum = baseToDecimal(num, base);
+
+                        for (int i = 0; i < strlen(decimalNum); i++) {
+                            decimalNum[i] = toupper(decimalNum[i]);
+                        }
+
+                        fputs(decimalNum, stream);
+                        free(decimalNum);
+                    }
+                    break;
+                case 'm':
+                    format++;
+                    if (*format == 'i') {
+                        int val = va_arg(args, int);
+                        int* p = &val;
+                        unsigned char* bytes = (unsigned char*)p;
+                        for (int i = 0; i < sizeof(int); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    } else if (*format == 'u') {
+                        unsigned int val = va_arg(args, unsigned int);
+                        unsigned char* bytes = (unsigned char*)&val;
+                        for (int i = 0; i < sizeof(unsigned int); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    } else if (*format == 'd') {
+                        double val = va_arg(args, double);
+                        unsigned char* bytes = (unsigned char*)&val;
+                        for (int i = 0; i < sizeof(double); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    } else if (*format == 'f') {
+                        float val = va_arg(args, double);
+                        unsigned char* bytes = (unsigned char*)&val;
+                        for (int i = 0; i < sizeof(float); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    }
                     break;
                 default:
-                    fputc(*fp, stream);
+                    format++;
+                    int num = va_arg(args, int);
+                    char format_str[3];
+                    format_str[0] = '%'; format_str[1] = *--format;
+                    format_str[2] = *++format;
+                    char* base_num[0];
+                    snprintf(base_num, 10, format_str, num);
+                    fputs(base_num, stream);
                     break;
             }
         } else {
-            fputc(*fp, stream);
+            fputc(*format, stream);
         }
-        fp++;
+
+        format++;
     }
+
     va_end(args);
 }
 
-void oversprintf(char* str, const char* format, ...) {
+void oversprintf(char* str, char* format, ...) {
     va_list args;
     va_start(args, format);
-    char* sp = str;
-    const char* fp = format;
-    while (*fp) {
-        if (*fp == '%') {
-            fp++;
-            switch (*fp) {
+
+    FILE* stream = (FILE*)fmemopen(str, 1000, "w");
+
+    while (*format) {
+        if (*format == '%') {
+            format++;
+            switch (*format) {
                 case 'R':
-                    print_roman(va_arg(args, int));
+                    format++;
+                    if (*format == 'o') {
+                        int num = va_arg(args, int);
+                        char* romanNum = decimalToRoman(num);
+                        fputs(romanNum, stream);
+                        free(romanNum);
+                    }
                     break;
                 case 'Z':
-                    print_zr(va_arg(args, unsigned int));
+                    format++;
+                    if (*format == 'r') {
+                        unsigned int num = va_arg(args, unsigned int);
+                        char* zeckendorfNum = fibonacciZeckendorf(num);
+
+                        while(zeckendorfNum[0] == '0') {
+                            for (int i = 0; i < strlen(zeckendorfNum) - 1; i++)
+                                zeckendorfNum[i] = zeckendorfNum[i + 1];
+                            zeckendorfNum[strlen(zeckendorfNum)-1] = '\0';
+                        }
+                        zeckendorfNum = reverseZecendorfNum(zeckendorfNum);
+
+                        fputs(zeckendorfNum, stream);
+                        free(zeckendorfNum);
+                    }
                     break;
                 case 'C':
-                    print_cv(va_arg(args, int), va_arg(args, int));
+                    format++;
+                    if (*format == 'v') {
+                        int num = va_arg(args, int);
+                        int base = va_arg(args, int);
+                        char* baseNum = decimalToBase(num, base);
+                        fputs(baseNum, stream);
+                        free(baseNum);
+                    } else if (*format == 'V') {
+                        int num = va_arg(args, int);
+                        int base = va_arg(args, int);
+                        char* baseNum = decimalToBase(num, base);
+                        for (int i = 0; i < strlen(baseNum); i++) {
+                            baseNum[i] = toupper(baseNum[i]);
+                        }
+                        fputs(baseNum, stream);
+                        free(baseNum);
+                    }
                     break;
                 case 'T':
-                    print_to(sp, va_arg(args, int), va_arg(args, int));
-                    sp += strlen(sp);
-                    fp++;
-                    continue;
+                    format++;
+                    if (*format == 'o') {
+                        char* num = va_arg(args, char*);
+                        int base = va_arg(args, int);
+
+                        for(int i=0; i<strlen(num); i++) {
+                            if(num[i] > 96 && num[i] < 123 || isdigit(num[i])) {}
+                            else {
+                                if (fclose (stream) == EOF)
+                                    printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+
+                                printf ("%s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+                                exit(INCORRECT_ARGUMENTS_INPUT);
+                            }
+                        }
+
+                        char* decimalNum = baseToDecimal(num, base);
+                        fputs(decimalNum, stream);
+                        free(decimalNum);
+                    } else if (*format == 'O') {
+                        char* num = va_arg(args, char*);
+                        int base = va_arg(args, int);
+
+                        for(int i=0; i<strlen(num); i++) {
+                            if(num[i] > 64 && num[i] < 91 || isdigit(num[i])) {}
+                            else {
+                                if (fclose (stream) == EOF)
+                                    printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+
+                                printf ("%s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+                                exit(INCORRECT_ARGUMENTS_INPUT);
+                            }
+                        }
+
+                        char* decimalNum = baseToDecimal(convert_uppercase_to_lowercase(num, strlen(num)), base);
+
+                        for (int i = 0; i < strlen(decimalNum); i++)
+                            decimalNum[i] = toupper(decimalNum[i]);
+
+                        fputs(decimalNum, stream);
+                        free(decimalNum);
+                    }
+                    break;
+                case 'm':
+                    format++;
+                    if (*format == 'i') {
+                        int val = va_arg(args, int);
+                        int* p = &val;
+                        unsigned char* bytes = (unsigned char*)p;
+                        for (int i = 0; i < sizeof(int); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    } else if (*format == 'u') {
+                        unsigned int val = va_arg(args, unsigned int);
+                        unsigned char* bytes = (unsigned char*)&val;
+                        for (int i = 0; i < sizeof(unsigned int); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    } else if (*format == 'd') {
+                        double val = va_arg(args, double);
+                        unsigned char* bytes = (unsigned char*)&val;
+                        for (int i = 0; i < sizeof(double); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    } else if (*format == 'f') {
+                        float val = va_arg(args, double);
+                        unsigned char* bytes = (unsigned char*)&val;
+                        for (int i = 0; i < sizeof(float); i++) {
+                            fprintf(stream, "%02x ", bytes[i]);
+                        }
+                    }
+                    break;
                 default:
-                    *sp = *fp;
-                    sp++;
+                    format++;
+                    int num = va_arg(args, int);
+                    char format_str[3];
+                    format_str[0] = '%'; format_str[1] = *--format;
+                    format_str[2] = *++format;
+                    char* baseNum;
+                    sprintf(baseNum, format_str, num);
+                    fputs(baseNum, stream);
                     break;
             }
         } else {
-            *sp = *fp;
-            sp++;
+            fputc(*format, stream);
         }
-        fp++;
+
+        format++;
     }
-    *sp = '\0';
+
     va_end(args);
+    fclose(stream);
 }
+
 
 int main() {
-    int num = 42;
-    char str[100];
 
-    overfprintf(stdout, "Roman Number: %R\n", num);
-    overfprintf(stdout, "Zr Number: %Z\n", num);
-    overfprintf(stdout, "Custom Base Lowercase: %C\n", num, 16);
-    overfprintf(stdout, "Custom Base Uppercase: %C\n", num, 16);
-    oversprintf(str, "Destructuring Memory Integer: %T\n", num);
-    printf("%s\n", str);
-    oversprintf(str, "Destructuring Memory Float: %T\n", 3.14);
-    printf("%s\n", str);
+    char str[1000];
+    int num = 123;
 
+    oversprintf(str, "Dec: %d, Roman: %TO, Zeckendorf: %Zr, Hex: %X, Binary: %b\n", num, "FF", 16, num, num, num);
+
+    FILE * file = fopen("f.txt", "w");
+
+    if (file == NULL) {
+        printf("%s", errorMessages[FILE_OPENING_ERROR]);
+        return FILE_OPENING_ERROR;
+    }
+
+    overfprintf(file, "Dec: %d, Roman: %To, Zeckendorf: %Zr, Hex: %X, Binary: %b\n", num, "ff", 16, num, num, num);
+
+    if ( fclose (file) == EOF) {
+        printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+        return FILE_CLOSING_ERROR;
+    }
+
+    printf("%s", str);
     return 0;
 }
