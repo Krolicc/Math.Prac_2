@@ -5,24 +5,16 @@
 
 typedef enum {
     SUCCESS = 0,
-    INCORRECT_NUMBER_INPUT,
-    INCORRECT_FLAG_INPUT,
-    INCORRECT_NUMBER_ARGUMENTS_INPUT,
     FILE_OPENING_ERROR,
     FILE_READING_ERROR,
-    FILE_WRITING_ERROR,
     FILE_CLOSING_ERROR,
     UNKNOWN_ERROR
 } ErrorCode;
 
 static const char* errorMessages[] = {
         "Всё хорошо",
-        "Некорректный ввод числа, попробуйте ещё раз",
-        "Некорректный ввод флага, попробуйте ещё раз",
-        "Некорректное кол-во аргументов, попробуйте ещё раз",
         "Ошибка открытия файла",
         "Ошибка чтения файла",
-        "Ошибка записи файла",
         "Ошибка закрытия файла",
         "Неизвестная ошибка, что-то пошло не так"
 };
@@ -35,7 +27,11 @@ int my_strncmp(const char* str1, const char* str2, size_t n)
     return result;
 }
 
-void search_substring(const char* substring, int file_count, ...) {
+void printResult(FILE *file, int line, int index) {
+    printf("Файл: %s | Строка: %d | Позиция: %d\n", file, line, index+1);
+}
+
+int search_substring(const char* substring, int file_count, ...) {
     va_list args;
     va_start(args, file_count);
 
@@ -44,37 +40,33 @@ void search_substring(const char* substring, int file_count, ...) {
 
         FILE* file = fopen(file_path, "r");
 
-        if (file == NULL) {
-//            printf("%s: %s\n", errorMessages[FILE_OPENING_ERROR], file_path);
-            exit(FILE_OPENING_ERROR);
-        }
+        if (file == NULL) return FILE_OPENING_ERROR;
 
         char line[100];
         int line_number = 1;
 
-        while (fgets(line, sizeof(line), file) != NULL) {
+        while (fgets(line, sizeof(line), file)) {
+            if(file == NULL) return FILE_READING_ERROR;
+
             char* ptr = line;
             int index = 0;
 
             while (*ptr) {
-                if (my_strncmp(ptr, substring, strlen(substring)) == 0) {
-                    printf("Файл: %s | Строка: %d | Позиция: %d\n", file_path, line_number, index+1);
-                }
+                if (my_strncmp(ptr, substring, strlen(substring)) == 0)
+                    printResult(file_path, line_number, index+1);
 
-                index++;
-                ptr++;
+                index++; ptr++;
             }
 
             line_number++;
         }
 
-        if ( fclose (file) == EOF) {
-//            printf("%s", errorMessages[FILE_CLOSING_ERROR]);
-            exit(FILE_CLOSING_ERROR);
-        }
+        if ( fclose (file) == EOF) return FILE_CLOSING_ERROR;
     }
 
     va_end(args);
+
+    return SUCCESS;
 }
 
 
@@ -82,7 +74,18 @@ int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    search_substring("ew", 2, "file1.txt", "file2.txt");
+    int result = search_substring("ew", 2, "file1.txt", "file2.txt");
+
+    if (result == 3) {
+        printf("%s", errorMessages[FILE_CLOSING_ERROR]);
+        return FILE_CLOSING_ERROR;
+    } else if (result == 2) {
+        printf("%s\n", errorMessages[FILE_READING_ERROR]);
+        return FILE_READING_ERROR;
+    } else if (result == 1) {
+        printf("%s\n", errorMessages[FILE_OPENING_ERROR]);
+        return FILE_OPENING_ERROR;
+    }
 
     return SUCCESS;
 }
