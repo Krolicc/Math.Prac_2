@@ -6,12 +6,7 @@ typedef enum {
     SUCCESS = 0,
     VIOLATION_CONVEXITY,
     INCORRECT_POINT_NUMBER_INPUT,
-    INCORRECT_FLAG_INPUT,
-    INCORRECT_NUMBER_ARGUMENTS_INPUT,
-    FILE_OPENING_ERROR,
-    FILE_READING_ERROR,
-    FILE_WRITING_ERROR,
-    FILE_CLOSING_ERROR,
+    INCORRECT_ARGUMENTS_INPUT,
     UNKNOWN_ERROR
 } ErrorCode;
 
@@ -19,12 +14,7 @@ static const char* errorMessages[] = {
         "Всё хорошо",
         "Нарушение выпуклости",
         "Некорректное число точек, попробуйте ещё раз",
-        "Некорректный ввод флага, попробуйте ещё раз",
-        "Некорректное кол-во аргументов, попробуйте ещё раз",
-        "Ошибка открытия файла",
-        "Ошибка чтения файла",
-        "Ошибка записи файла",
-        "Ошибка закрытия файла",
+        "Некорректные аргументы, попробуйте ещё раз",
         "Неизвестная ошибка, что-то пошло не так"
 };
 
@@ -44,6 +34,11 @@ int isConvexPolygon(int vertices, ...) {
     y2 = va_arg(args, double);
     x3 = va_arg(args, double);
     y3 = va_arg(args, double);
+
+    if(x1 != 0 && x1 < 1e-100 && x1 > 0 || x2 != 0 && x2 < 1e-100 && x2 > 0 || x3 != 0 && x3 < 1e-100 && x3 > 0 ||
+            y1 != 0 && y1 < 1e-100 && y1 > 0 || y2 != 0 && y2 < 1e-100 && y2 > 0 || y3 != 0 && y3 < 1e-100 && y3 > 0)
+        return INCORRECT_ARGUMENTS_INPUT;
+
     x4 = x1;
     y4 = y1;
 
@@ -53,6 +48,9 @@ int isConvexPolygon(int vertices, ...) {
         double xi, yi;
         xi = va_arg(args, double);
         yi = va_arg(args, double);
+
+        if(xi != 0 && xi < 1e-100 && xi > 0 || yi != 0 && yi < 1e-100 && yi > 0)
+            return INCORRECT_ARGUMENTS_INPUT;
 
         double nextCrossProduct = (x3-x2)*(yi-y3) - (y3-y2)*(xi-x3);
         if ((crossProduct > 0 && nextCrossProduct < 0) || (crossProduct < 0 && nextCrossProduct > 0)) {
@@ -87,6 +85,10 @@ double evaluatePolynomial(double x, int degree, ...) {
 
     for (int i = degree; i >= 0; i--) {
         double coefficient = va_arg(args, double);
+
+        if (coefficient != 0 && coefficient < 1e-100 && coefficient > 0)
+            return coefficient;
+
         result = result * x + coefficient;
     }
 
@@ -100,19 +102,27 @@ int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
 
-    int convex = isConvexPolygon(4, 1.0, 4.0, 4.0, 2.0, 3.0, 0.0, 3.0, 1.0);
+    int convex = isConvexPolygon(4, 1.0, 1.0, 4.0, 0.0, 9.0, 3.0, 1.0, 8.0);
 
     if (!convex) {
         printf("Многоугольник выпуклый\n");
     } else if (convex == 2) {
-        printf("%s", errorMessages[INCORRECT_POINT_NUMBER_INPUT]);
+        printf("IS CONVEX POLYGON: %s", errorMessages[INCORRECT_POINT_NUMBER_INPUT]);
         return INCORRECT_POINT_NUMBER_INPUT;
-    }
-    else {
+    } else if (convex == 3) {
+        printf("IS CONVEX POLYGON: %s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+        return INCORRECT_ARGUMENTS_INPUT;
+    } else {
         printf("Многоугольник не выпуклый\n");
     }
 
     double value = evaluatePolynomial(2.0, 3, 1.0, -2.0, 0.0, 3.0);
+
+    if (value != 0 && value < 1e-100 && value > 0) {
+        printf("EVALUATE POLYNOMIAL: %s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+        return INCORRECT_ARGUMENTS_INPUT;
+    }
+
     printf("Значение многочлена: %f\n", value);
 
     return SUCCESS;
