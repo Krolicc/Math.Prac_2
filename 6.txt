@@ -4,6 +4,29 @@
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
+#include <Windows.h>
+
+typedef enum {
+    SUCCESS = 0,
+    INCORRECT_FLAG_INPUT,
+    INCORRECT_INPUT_STRING,
+    INCORRECT_ARGUMENTS_INPUT,
+    FILE_OPENING_ERROR,
+    FILE_READING_ERROR,
+    FILE_CLOSING_ERROR,
+    UNKNOWN_ERROR
+} ErrorCode;
+
+static const char* errorMessages[] = {
+        "Всё хорошо",
+        "Некорректный ввод флага, попробуйте ещё раз",
+        "Неккоректная входная строка",
+        "Некорректные аргументы, попробуйте ещё раз",
+        "Ошибка открытия файла",
+        "Ошибка чтения файла",
+        "Ошибка закрытия файла",
+        "Неизвестная ошибка, что-то пошло не так"
+};
 
 int convert_roman(char c) {
     switch (c) {
@@ -29,8 +52,17 @@ int overfscanf(FILE* stream, const char* format, ...) {
             i++;
             switch (format[i]) {
                 case 'R': {
-                    char roman[3];
-                    fscanf(stream, "%32s", roman);
+                    char roman[1024], symbol;
+                    int extra_str_len = 0;
+
+                    while((symbol = fgetc(stream)) == ' ' || symbol == '\n') continue;
+
+                    while( symbol != ' ' && symbol != EOF && symbol != '\n') {
+                        roman[extra_str_len] = symbol;
+                        if(strchr("IVXLCDM", roman[extra_str_len]) == NULL) return -1;
+                        extra_str_len++;
+                        symbol = fgetc(stream);
+                    }
 
                     int length = strlen(roman);
                     int number = 0;
@@ -53,8 +85,20 @@ int overfscanf(FILE* stream, const char* format, ...) {
                     break;
                 }
                 case 'Z': {
-                    char zendoforf[33];
-                    fscanf(stream, "%32s", zendoforf);
+                    char zendoforf[1024], symbol;
+                    int extra_str_len = 0;
+
+                    while((symbol = fgetc(stream)) == ' ' || symbol == '\n') continue;
+
+                    while(symbol != ' ' && symbol != EOF && symbol != '\n') {
+                        zendoforf[extra_str_len] = symbol;
+                        if(strchr("01", zendoforf[extra_str_len]) == NULL) return -1;
+                        extra_str_len++;
+                        symbol = fgetc(stream);
+                    }
+
+                    if(zendoforf[extra_str_len-1] != '1') return -1;
+                    else zendoforf[extra_str_len-1] = '\0';
 
                     int length = strlen(zendoforf);
                     int number = 0;
@@ -78,8 +122,18 @@ int overfscanf(FILE* stream, const char* format, ...) {
                     int* result = va_arg(args, int*);
                     int base = va_arg(args, int);
 
-                    char number[33];
-                    fscanf(stream, "%32s", number);
+                    char number[1024], symbol;
+                    int extra_str_len = 0;
+
+                    while((symbol = fgetc(stream)) == ' ' || symbol == '\n') continue;
+
+                    while(symbol != ' ' && symbol != EOF && symbol != '\n') {
+                        number[extra_str_len] = symbol;
+                        extra_str_len++;
+                        symbol = fgetc(stream);
+                    }
+
+                    number[extra_str_len] = '\0';
 
                     int length = strlen(number);
                     int num = 0;
@@ -93,21 +147,19 @@ int overfscanf(FILE* stream, const char* format, ...) {
                                 printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только заглавные латинские буквы\n");
                                 *result = -1;
                                 count++;
-                                return 0;
+                                exit(INCORRECT_INPUT_STRING);
                             } else if(!boolCnt && number[j] != tolower(number[j])) {
                                 printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только строчные латинские буквы\n");
                                 *result = -1;
                                 count++;
-                                return 0;
+                                exit(INCORRECT_INPUT_STRING);
                             }
                             digit = tolower(number[j]) - 'a' + 10;
                         } else {
                             digit = number[j] - '0';
                         }
 
-                        if (digit >= base) {
-                            digit = 0;
-                        }
+                        if (digit > base-1) return -1;
 
                         num += digit * pow(base, length - j - 1);
                     }
@@ -138,7 +190,7 @@ int overfscanf(FILE* stream, const char* format, ...) {
     return count;
 }
 
-int oversscanf(const char* str, const char* format, ...) {
+int oversscanf(char* str, const char* format, ...) {
     va_list args;
     va_start(args, format);
 
@@ -150,8 +202,16 @@ int oversscanf(const char* str, const char* format, ...) {
             switch (format[i]) {
                 case 'R': {
                     char roman[1024];
-                  //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-                    sscanf(str, "%32s", roman);
+                    int extra_str_len=0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        roman[extra_str_len] = *str;
+                        if(strchr("IVXLCDM", roman[extra_str_len]) == NULL) return -1;
+                        extra_str_len++;
+                        str++;
+                    }
 
                     int length = strlen(roman);
                     int number = 0;
@@ -174,8 +234,20 @@ int oversscanf(const char* str, const char* format, ...) {
                     break;
                 }
                 case 'Z': {
-                    char zendoforf[33];
-                    sscanf(str, "%32s", zendoforf);
+                    char zendoforf[1024];
+                    int extra_str_len=0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        zendoforf[extra_str_len] = *str;
+                        if(strchr("01", zendoforf[extra_str_len]) == NULL) return -1;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    if(zendoforf[extra_str_len-1] != '1') return -1;
+                    else zendoforf[extra_str_len-1] = '\0';
 
                     int length = strlen(zendoforf);
                     int number = 0;
@@ -198,10 +270,20 @@ int oversscanf(const char* str, const char* format, ...) {
                 case 'C': {
                     int* result = va_arg(args, int*);
                     int base = va_arg(args, int);
-                    
-                    
+
+                    if(base < 2 || base > 36) base = 10;
+
                     char number[1024];
-                    sscanf(str, "%32s", number);
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
 
                     int length = strlen(number);
                     int num = 0;
@@ -212,24 +294,22 @@ int oversscanf(const char* str, const char* format, ...) {
                         int digit;
                         if (isalpha(number[j])) {
                             if(boolCnt && number[j] == tolower(number[j])) {
-                                printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только заглавные латинские буквы\n");
+                                printf("Проверьте входную строку для перевода в дес. сист. счис! Необходимы только заглавные латинские буквы\n");
                                 *result = -1;
                                 count++;
-                                return 0;
+                                exit(INCORRECT_INPUT_STRING);
                             } else if(!boolCnt && number[j] != tolower(number[j])) {
-                                printf("Проверьте входной файл для перевода в дес. сист. счис! Необходимы только строчные латинские буквы\n");
+                                printf("Проверьте входную строку для перевода в дес. сист. счис! Необходимы только строчные латинские буквы\n");
                                 *result = -1;
                                 count++;
-                                return 0;
+                                exit(INCORRECT_INPUT_STRING);
                             }
                             digit = tolower(number[j]) - 'a' + 10;
                         } else {
                             digit = number[j] - '0';
                         }
 
-                        if (digit >= base) {
-                            digit = 0;
-                        }
+                        if (digit > base-1) return -1;
 
                         num += digit * pow(base, length - j - 1);
                     }
@@ -237,6 +317,197 @@ int oversscanf(const char* str, const char* format, ...) {
                     *result = num;
                     count++;
                     break;
+                }
+                case 's': {
+                    char* result = va_arg(args, char*);
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    strcpy(result, number);
+                    count++;
+                    break;
+                }
+                case 'd': {
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    int res;
+
+                    if(!isdigit(number[0])) res = 0;
+                    else res = atoi(number);
+
+                    int* result = va_arg(args, int*);
+                    *result = res;
+                    count++;
+                    break;
+                }
+                case 'i': {
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    int res;
+
+                    if(!isdigit(number[0])) res = 0;
+                    else res = atoi(number);
+
+                    int* result = va_arg(args, int*);
+                    *result = res;
+                    count++;
+                    break;
+                }
+                case 'x': {
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    for(int j=0; j<strlen(number); j++)
+                        if(strchr("-1234567890abcdefABCDEF", number[j]) == NULL) return -1;
+
+                    long res = strtol(number, NULL, 16);
+
+                    int* result = va_arg(args, int*);
+                    *result = res;
+                    count++;
+                    break;
+                }
+                case 'X': {
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    for(int j=0; j<strlen(number); j++)
+                        if(strchr("1234567890abcdefABCDEF", number[j]) == NULL) return -1;
+
+                    long res = strtol(number, NULL, 16);
+
+                    int* result = va_arg(args, int*);
+                    *result = res;
+                    count++;
+                    break;
+                }
+                case 'o': {
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    for(int j=0; j<strlen(number); j++)
+                        if(strchr("-1234567", number[j]) == NULL) return -1;
+
+                    long res = strtol(number, NULL, 8);
+
+                    int* result = va_arg(args, int*);
+                    *result = res;
+                    count++;
+                    break;
+                }
+                case 'c': {
+                    char* result = va_arg(args, char*);
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    number[1] = '\0';
+
+                    strcpy(result, number);
+                    count++;
+                    break;
+                }
+                case 'f': {
+                    float* result = va_arg(args, float*);
+
+                    char number[1024];
+                    int extra_str_len = 0;
+
+                    while(*str == ' ') str++;
+
+                    while(*str != ' ') {
+                        number[extra_str_len] = *str;
+                        extra_str_len++;
+                        str++;
+                    }
+
+                    *result = (float)atof(number);
+                    count++;
+                    break;
+                }
+                case 'l': {
+                    if(format[i+1] == 'f') {
+                        double *result = va_arg(args, double*);
+
+                        char number[1024];
+                        int extra_str_len = 0;
+
+                        while (*str == ' ') str++;
+
+                        while (*str != ' ') {
+                            number[extra_str_len] = *str;
+                            extra_str_len++;
+                            str++;
+                        }
+//                        char * ptrEnd;
+                        *result = strtod(number, NULL);
+                        count++;
+                        break;
+                    } else return -1;
                 }
                 default:
                     if (format[i] == tolower(format[i])) {
@@ -262,24 +533,46 @@ int oversscanf(const char* str, const char* format, ...) {
 }
 
 int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
     FILE *file = fopen("input.txt", "r");
-    int num1, num2, num3, num4;
-    // overfscanf(file, "%Ro", &num1);
-    // overfscanf(file, "%Zr", &num2);
-    // overfscanf(file, "%Cv", &num3, 13);
-    overfscanf(file, "%CV", &num4, 16);
-    printf("Num1: %d\n", num1);  // выводится целое число, записанное римскими цифрами
-    printf("Num2: %u\n", num2);  // выводится целое число, записанное в цекендорфовом представлении
-    printf("Num3: %d\n", num3);  // выводится целое число, записанное в системе счисления с основанием 10
-    printf("Num4: %d\n", num4);  // выводится целое число, записанное в системе счисления с основанием 16
-    fclose(file);
+    
+    if (file == NULL) {
+        printf("%s", errorMessages[FILE_OPENING_ERROR]);
+        return FILE_OPENING_ERROR;
+    }
 
-    oversscanf("MXV", "%Ro", &num1);
-    oversscanf("1010001", "%Zr", &num2);
-    oversscanf("34", "%Cv", &num3, 13);
-    printf("Num1: %d\n", num1);  // выводится целое число, записанное римскими цифрами
-    printf("Num2: %u\n", num2);  // выводится целое число, записанное в цекендорфовом представлении
-    printf("Num3: %d\n", num3);  // выводится целое число, записанное в системе счисления с основанием 10
+    int num1, num2, num3, num4, isError;
+    int extraChar;
+    isError = overfscanf(file, "%Ro %Zr %CV", &num4, &num3, &num1, 16);
 
-    return 0;
+    if ( fclose (file) == EOF) {
+        printf ("%s", errorMessages[FILE_CLOSING_ERROR]);
+        return FILE_CLOSING_ERROR;
+    }
+
+    if(isError == -1) {
+        printf("OVERFSCANF: %s\n", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+        return INCORRECT_ARGUMENTS_INPUT;
+    }
+
+    printf("Num3: %d\n", num3);
+    printf("Num4: %d\n", num4);
+    printf("Num1: %d\n", num1);
+
+
+    isError = oversscanf("MXVII 10100011 34 12354", "%Ro %Zr %Cv %o", &num1, &num2, &num3, 10, &extraChar);
+
+    if(isError == -1) {
+        printf("OVERSSCANF: %s\n", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+        return INCORRECT_ARGUMENTS_INPUT;
+    }
+
+    printf("Num1: %d\n", num1);
+    printf("Num2: %u\n", num2);
+    printf("Num3: %d\n", num3);
+    printf("Arg4: %o\n", extraChar);
+
+    return SUCCESS;
 }
