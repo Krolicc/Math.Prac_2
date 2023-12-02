@@ -1,38 +1,34 @@
 #include <stdio.h>
 #include <stdarg.h>
-#include <math.h>
 #include <Windows.h>
 
 typedef enum {
     SUCCESS = 0,
     INCORRECT_ARGUMENT_INPUT,
-    NON_EXISTENT_REPRESENTATION,
     INCORRECT_NUMBER_ARGUMENTS_INPUT,
-    FILE_OPENING_ERROR,
-    FILE_READING_ERROR,
-    FILE_WRITING_ERROR,
-    FILE_CLOSING_ERROR,
     UNKNOWN_ERROR
 } ErrorCode;
 
 static const char* errorMessages[] = {
         "Всё хорошо",
         "Некорректный аргумент, попробуйте ещё раз",
-        "Нет конечного представление",
         "Некорректное кол-во аргументов, попробуйте ещё раз",
-        "Ошибка открытия файла",
-        "Ошибка чтения файла",
-        "Ошибка записи файла",
-        "Ошибка закрытия файла",
         "Неизвестная ошибка, что-то пошло не так"
 };
 
 void printMessage(int isCorrectRepresentation, double number, int base) {
-    if (isCorrectRepresentation) {
-        printf("%.3f имеет конечного представление в системе счисления с основанием %d\n", number, base);
+    if(!isCorrectRepresentation && number < 1e-100) {
+        printf("HAS FINITE REPRESENTATION: %s\n", errorMessages[INCORRECT_ARGUMENT_INPUT]);
+        exit(INCORRECT_ARGUMENT_INPUT);
     } else {
-        printf("%.3f не имеет конечного представл. в системе счисления с основанием %d\n", number, base);
+        printf("%.3f", number);
+        if (!isCorrectRepresentation) printf(" не");
+        printf(" имеет к/п в системе счисления с основанием %d\n", base);
     }
+}
+
+void funcSeparator() {
+    printf("\n");
 }
 
 int hasFiniteRepresentation(int base, int count, ...) {
@@ -46,16 +42,13 @@ int hasFiniteRepresentation(int base, int count, ...) {
         while (fractionalPart != 0 && fractionalPart * base <= 1)
             fractionalPart *= base;
 
-        if (fractionalPart - (int)fractionalPart <= 0.001) {
+        if (fractionalPart - (int)fractionalPart <= 0.001)
             printMessage(1, number, base);
-        } else {
-            if (number < 0.0) exit(INCORRECT_ARGUMENT_INPUT);
-
-            printMessage(0, number, base);
-        }
+        else printMessage(0, number, base);
     }
 
     va_end(args);
+    funcSeparator();
 
     return SUCCESS;
 }
@@ -66,10 +59,8 @@ int main() {
 
     double a = 1.0/6.0;
 
-    hasFiniteRepresentation(2, 3, 0.5, 0.25, 0.0);
-    hasFiniteRepresentation(6, 2, a, 'a');
-
-
+    hasFiniteRepresentation(2, 3, 'a', 0.25, 0.0);
+    hasFiniteRepresentation(6, 3, a, "asd", 0.0);
 
     return SUCCESS;
 }
