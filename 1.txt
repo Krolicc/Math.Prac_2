@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 #include <ctype.h>
 #include <Windows.h>
 
@@ -41,7 +41,7 @@ char* calculate_length(const char* str) {
 
     char* result = (char*)malloc(length * sizeof(char) + 1);
 
-    if(result == NULL) {
+    if (result == NULL) {
         printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
         exit(MEMORY_ALLOCATION_ERROR);
     }
@@ -89,6 +89,7 @@ char* convert_to_uppercase(const char* str) {
     }
 
     char* result = (char*)malloc(length * sizeof(char) + 1);
+
 
     if(result == NULL) {
         printf("%s", errorMessages[MEMORY_ALLOCATION_ERROR]);
@@ -235,14 +236,14 @@ int main(int argc, char *argv[]) {
 
             case 'c':
                 if (argc >= 4) {
-                    unsigned int seed = atoi(argv[2]);
-                    int num_strings = argc - 2;
+                    unsigned int seed = atoi(argv[3]);
+                    int num_strings = argc - 3;
                     char* strings[num_strings];
 
-                    strings[0] = argv[1];
+                    strings[0] = argv[2];
 
                     for (int i = 1; i < num_strings; i++) {
-                        strings[i] = argv[i + 2];
+                        strings[i] = argv[i + 3];
                     }
 
                     result = concatenate_strings(seed, num_strings, strings);
