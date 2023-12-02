@@ -6,36 +6,27 @@
 typedef enum {
     SUCCESS = 0,
     INCORRECT_NUMBER_INPUT,
-    INCORRECT_ARGUMENTS_COUNT_INPUT,
-    INCORRECT_FLAG_INPUT,
+    INCORRECT_ARGUMENTS_INPUT,
     INCORRECT_NUMBER_ARGUMENTS_INPUT,
-    FILE_OPENING_ERROR,
-    FILE_READING_ERROR,
-    FILE_WRITING_ERROR,
     FILE_CLOSING_ERROR,
     UNKNOWN_ERROR
 } ErrorCode;
 
 static const char* errorMessages[] = {
         "Всё хорошо",
-        "Некорректный ввод числа кол-ва аргументов, попробуйте ещё раз",
+        "Некорректный кол-во аргументов, попробуйте ещё раз",
         "Некорректный ввод числа, попробуйте ещё раз",
-        "Некорректный ввод флага, попробуйте ещё раз",
-        "Некорректное кол-во аргументов, попробуйте ещё раз",
-        "Ошибка открытия файла",
-        "Ошибка чтения файла",
-        "Ошибка записи файла",
-        "Ошибка закрытия файла",
+        "Некорректные аргументы, попробуйте ещё раз",
         "Неизвестная ошибка, что-то пошло не так"
 };
 
-#define foo(X) _Generic((X), \
-    int: foo_int, \
-    double: foo_double, \
-    char *: foo_charptr \
-)(X)
+double power(double x, double powerN) {
 
-double power(double x, int n) {
+    if (x != 0 && x < 1e-100 && x > 0) return x;
+    else if (powerN != 0 && powerN < 1e-100 && powerN > 0) return powerN;
+
+    int n = (int)powerN;
+
     if (n == 0) {
         return 1.0;
     } else if (n % 2 == 0) {
@@ -57,6 +48,10 @@ double averageGeometric(int n, ...) {
 
     for (int i = 0; i < n; i++) {
         double num = va_arg(args, double);
+
+        if (num != 0 && num < 1e-100 && num > 0)
+            return num;
+
         product *= num;
     }
 
@@ -73,12 +68,24 @@ int main() {
     int arguments_count = 3;
 
     double averageGeometric_result = averageGeometric(arguments_count, 2.0, 3.0, 3.0);
+
+    if (averageGeometric_result != 0 && averageGeometric_result < 1e-100 && averageGeometric_result > 0) {
+        printf("AVERAGE GEOMETRIC: %s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+        return INCORRECT_ARGUMENTS_INPUT;
+    }
+
     printf("Среднее геометрчиеское: %f\n", averageGeometric_result);
 
     double base = 2.0;
     int exponent = 5;
 
     double power_result = power(base, exponent);
+
+    if (power_result != 0 && power_result < 1e-100 && power_result > 0) {
+        printf("POWER: %s", errorMessages[INCORRECT_ARGUMENTS_INPUT]);
+        return INCORRECT_ARGUMENTS_INPUT;
+    }
+
     printf("%f в степени %d = %f\n", base, exponent, power_result);
 
     return SUCCESS;
